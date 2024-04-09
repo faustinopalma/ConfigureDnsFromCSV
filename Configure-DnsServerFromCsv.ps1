@@ -113,7 +113,7 @@ Function Configure-ConditionalForwarders {
   
     foreach ($entry in $conditionalForwarders) {  
         $forwarderIPs = $entry.ForwarderIPs -split ';'  
-        $existingForwarder = Get-DnsServerConditionalForwarderZone -Name $entry.Domain -ErrorAction SilentlyContinue  
+        $existingForwarder = Get-DnsServerZone -Name $entry.Domain -ErrorAction SilentlyContinue | Where-Object { $_.ZoneType -eq "ConditionalForwarder" }  
   
         if ($existingForwarder) {  
             $existingIPs = $existingForwarder.MasterServers | Sort-Object  
