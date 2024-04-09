@@ -57,7 +57,7 @@ from the CSV files and apply them to the DNS server configuration. It will also 
 and update them if necessary.  
  
 .EXAMPLE  
-C:\PS> .\Configure-DnsServerFromCsv.ps1  
+C:\PS> .\Set-DnsServerFromCsv.ps1  
   
 This example runs the script to configure the DNS server based on the provided CSV files.  
   
@@ -83,6 +83,14 @@ If ((Get-WindowsFeature -Name 'DNS').InstallState -ne 'Installed') {
 #$delegationsCsv = 'C:\path\to\delegations.csv'  
 #$stubZonesCsv = 'C:\path\to\stub_zones.csv'  
 
+# Define the path to the CSV files  
+#$forwardersCsv = 'C:\Users\fausto\ConfigureDnsFromCSV\forwarders.csv'  
+#$conditionalForwardersCsv = 'C:\Users\fausto\ConfigureDnsFromCSV\conditional_forwarders.csv'  
+#$secondaryZonesCsv = 'C:\Users\fausto\ConfigureDnsFromCSV\secondary_zones.csv'  
+#$rootHintsCsv = 'C:\Users\fausto\ConfigureDnsFromCSV\root_hints.csv'  
+#$delegationsCsv = 'C:\Users\fausto\ConfigureDnsFromCSV\delegations.csv'  
+#$stubZonesCsv = 'C:\Users\fausto\ConfigureDnsFromCSV\stub_zones.csv' 
+
 # Define the path to the CSV files using $PSScriptRoot  
 $forwardersCsv = Join-Path $PSScriptRoot 'forwarders.csv'  
 $conditionalForwardersCsv = Join-Path $PSScriptRoot 'conditional_forwarders.csv'  
@@ -93,7 +101,7 @@ $stubZonesCsv = Join-Path $PSScriptRoot 'stub_zones.csv'
 
   
 # Function to configure global forwarders  
-Function Configure-GlobalForwarders {  
+Function Set-GlobalForwarders {  
     Param ($csvPath)  
     $currentForwarders = (Get-DnsServerForwarder).IPAddress | Sort-Object  
     $csvForwarders = Import-Csv -Path $csvPath | ForEach-Object { $_.IPAddress } | Sort-Object  
@@ -104,10 +112,16 @@ Function Configure-GlobalForwarders {
     } Else {  
         Write-Host "Global forwarders are already set correctly."  
     }  
+}
+
+If (Test-Path -Path $forwardersCsv) {  
+    Set-GlobalForwarders -csvPath $forwardersCsv  
+} Else {  
+    Write-Host "The forwarders CSV file was not found."  
 }  
   
 # Function to configure conditional forwarders  
-Function Configure-ConditionalForwarders {  
+Function Set-ConditionalForwarders {
     Param ($csvPath)  
     $conditionalForwarders = Import-Csv -Path $csvPath  
   
@@ -124,14 +138,20 @@ Function Configure-ConditionalForwarders {
                 Write-Host "Conditional forwarder for domain $($entry.Domain) is already set correctly."  
             }  
         } else {  
-            Add-DnsServerConditionalForwarderZone -Name $entry.Domain -MasterServers $forwarderIPs  
+            Add-DnsServerConditionalForwarderZone -Name $entry.Domain -ReplicationScope "Forest" -MasterServers $forwarderIPs  
             Write-Host "Added conditional forwarder for domain $($entry.Domain)"  
         }  
-    }  
+    }
+}  
+
+If (Test-Path -Path $conditionalForwardersCsv) {  
+    Set-ConditionalForwarders -csvPath $conditionalForwardersCsv  
+} Else {  
+    Write-Host "The conditional forwarders CSV file was not found."  
 }  
   
 # Function to configure secondary zones  
-Function Configure-SecondaryZones {  
+Function Set-SecondaryZones {  
     Param ($csvPath)  
     $secondaryZones = Import-Csv -Path $csvPath  
   
@@ -153,9 +173,15 @@ Function Configure-SecondaryZones {
         }  
     }  
 }  
+
+If (Test-Path -Path $secondaryZonesCsv) {  
+    Set-SecondaryZones -csvPath $secondaryZonesCsv  
+} Else {  
+    Write-Host "The secondary zones CSV file was not found."  
+}  
   
 # Function to configure root hints  
-Function Configure-RootHints {  
+Function Set-RootHints {  
     Param ($csvPath)  
     $csvRootHints = Import-Csv -Path $csvPath  
   
@@ -174,10 +200,16 @@ Function Configure-RootHints {
             Write-Host "Added root hint for $($entry.HostName)"  
         }  
     }  
+} 
+
+If (Test-Path -Path $rootHintsCsv) {  
+    Set-RootHints -csvPath $rootHintsCsv  
+} Else {  
+    Write-Host "The root hints CSV file was not found."  
 }  
   
 # Function to configure delegations  
-Function Configure-Delegations {  
+Function Set-Delegations {  
     Param ($csvPath)  
     $delegations = Import-Csv -Path $csvPath  
   
@@ -193,9 +225,15 @@ Function Configure-Delegations {
         }  
     }  
 }  
+
+If (Test-Path -Path $delegationsCsv) {  
+    Set-Delegations -csvPath $delegationsCsv  
+} Else {  
+    Write-Host "The delegations CSV file was not found."  
+}  
   
 # Function to configure stub zones  
-Function Configure-StubZones {  
+Function Set-StubZones {  
     Param ($csvPath)  
     $stubZones = Import-Csv -Path $csvPath  
   
@@ -218,39 +256,8 @@ Function Configure-StubZones {
     }  
 }  
   
-# Check if the CSV files exist and call the configuration functions  
-If (Test-Path -Path $forwardersCsv) {  
-    Configure-GlobalForwarders -csvPath $forwardersCsv  
-} Else {  
-    Write-Host "The forwarders CSV file was not found."  
-}  
-  
-If (Test-Path -Path $conditionalForwardersCsv) {  
-    Configure-ConditionalForwarders -csvPath $conditionalForwardersCsv  
-} Else {  
-    Write-Host "The conditional forwarders CSV file was not found."  
-}  
-  
-If (Test-Path -Path $secondaryZonesCsv) {  
-    Configure-SecondaryZones -csvPath $secondaryZonesCsv  
-} Else {  
-    Write-Host "The secondary zones CSV file was not found."  
-}  
-  
-If (Test-Path -Path $rootHintsCsv) {  
-    Configure-RootHints -csvPath $rootHintsCsv  
-} Else {  
-    Write-Host "The root hints CSV file was not found."  
-}  
-  
-If (Test-Path -Path $delegationsCsv) {  
-    Configure-Delegations -csvPath $delegationsCsv  
-} Else {  
-    Write-Host "The delegations CSV file was not found."  
-}  
-  
 If (Test-Path -Path $stubZonesCsv) {  
-    Configure-StubZones -csvPath $stubZonesCsv  
+    Set-StubZones -csvPath $stubZonesCsv  
 } Else {  
     Write-Host "The stub zones CSV file was not found."  
 }  
