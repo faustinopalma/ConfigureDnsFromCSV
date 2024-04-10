@@ -1,3 +1,0 @@
-Domain,ForwarderIPs
-example.com,"192.0.2.10;192.0.2.11"
-internal.example,"192.168.0.10;192.168.0.11"
