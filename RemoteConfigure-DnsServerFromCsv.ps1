@@ -1,87 +1,76 @@
-<#  
-.SYNOPSIS  
-This PowerShell script remotely configures a DNS server with various settings based on input from CSV files.  
+# Define the path to the dns-configs folder  
+$dnsConfigsPath = Join-Path -Path $PSScriptRoot -ChildPath "dns-configs"  
   
-.DESCRIPTION  
-This script uses CSV files to configure global forwarders, conditional forwarders, secondary zones, root hints, delegations, and stub zones on a remote DNS server.  
+# Get the list of server folders in the dns-configs directory  
+$serverFolders = Get-ChildItem -Path $dnsConfigsPath -Directory  
   
-.EXAMPLE  
-C:\PS> .\RemoteConfigure-DnsServerFromCsv.ps1 -RemoteServer 'dns01.example.com'  
+# Loop through each server folder  
+foreach ($serverFolder in $serverFolders) {  
+    # Define the server name from the folder name  
+    $serverName = $serverFolder.Name  
   
-This example runs the script to configure the DNS server on 'dns01.example.com' based on the provided CSV files.  
+    # Define the path to the CSV files for the current server  
+    $forwardersPath = Join-Path -Path $serverFolder.FullName -ChildPath "forwarders.csv"  
+    $conditionalForwardersPath = Join-Path -Path $serverFolder.FullName -ChildPath "conditional_forwarders.csv"  
+    $secondaryZonesPath = Join-Path -Path $serverFolder.FullName -ChildPath "secondary_zones.csv"  
+    $rootHintsPath = Join-Path -Path $serverFolder.FullName -ChildPath "root_hints.csv"  
+    $delegationsPath = Join-Path -Path $serverFolder.FullName -ChildPath "delegations.csv"  
+    $stubZonesPath = Join-Path -Path $serverFolder.FullName -ChildPath "stub_zones.csv"  
   
-.PARAMETER RemoteServer  
-The DNS server that you want to configure remotely.  
+    # Configure forwarders  
+    if (Test-Path $forwardersPath) {  
+        $forwarders = Import-Csv -Path $forwardersPath  
+        foreach ($forwarder in $forwarders) {  
+            # Assuming the CSV has a column named 'IPAddress'  
+            Add-DnsServerForwarder -ComputerName $serverName -IPAddress $forwarder.IPAddress  
+        }  
+    }  
   
-.NOTES  
-Make sure to run this script with administrative privileges on the jump host.  
-Each CSV file must be formatted correctly for the script to work.  
-PowerShell remoting must be enabled on the remote server.  
-#>  
+    # Configure conditional forwarders  
+    if (Test-Path $conditionalForwardersPath) {  
+        $conditionalForwarders = Import-Csv -Path $conditionalForwardersPath  
+        foreach ($conditionalForwarder in $conditionalForwarders) {  
+            # Assuming the CSV has columns named 'Name' and 'MasterServers'  
+            Add-DnsServerConditionalForwarderZone -ComputerName $serverName -Name $conditionalForwarder.Name -MasterServers $conditionalForwarder.MasterServers  
+        }  
+    }  
   
-param (  
-    [Parameter(Mandatory)]  
-    [string]$RemoteServer  
-)  
+    # Configure secondary zones  
+    if (Test-Path $secondaryZonesPath) {  
+        $secondaryZones = Import-Csv -Path $secondaryZonesPath  
+        foreach ($secondaryZone in $secondaryZones) {  
+            # Assuming the CSV has columns named 'Name' and 'MasterServers'  
+            Add-DnsServerSecondaryZone -ComputerName $serverName -Name $secondaryZone.Name -MasterServers $secondaryZone.MasterServers  
+        }  
+    }  
   
-# Define the path to the CSV files using $PSScriptRoot  
-$forwardersCsv = Join-Path $PSScriptRoot 'forwarders.csv'  
-$conditionalForwardersCsv = Join-Path $PSScriptRoot 'conditional_forwarders.csv'  
-$secondaryZonesCsv = Join-Path $PSScriptRoot 'secondary_zones.csv'  
-$rootHintsCsv = Join-Path $PSScriptRoot 'root_hints.csv'  
-$delegationsCsv = Join-Path $PSScriptRoot 'delegations.csv'  
-$stubZonesCsv = Join-Path $PSScriptRoot 'stub_zones.csv'  
+    # Configure root hints  
+    if (Test-Path $rootHintsPath) {  
+        $rootHints = Import-Csv -Path $rootHintsPath  
+        foreach ($rootHint in $rootHints) {  
+            # Assuming the CSV has columns named 'NameServer' and 'IPAddress'  
+            Set-DnsServerRootHint -ComputerName $serverName -NameServer $rootHint.NameServer -IPAddress $rootHint.IPAddress  
+        }  
+    }  
   
-# Function to configure global forwarders  
-Function Configure-GlobalForwarders {  
-    Param ($forwarders)  
-    Set-DnsServerForwarder -IPAddress $forwarders  
+    # Configure delegations  
+    if (Test-Path $delegationsPath) {  
+        $delegations = Import-Csv -Path $delegationsPath  
+        foreach ($delegation in $delegations) {  
+            # Assuming the CSV has columns named 'ChildZoneName', 'NameServer', 'IPAddress', and 'ParentZoneName'  
+            Add-DnsServerZoneDelegation -ComputerName $serverName -ChildZoneName $delegation.ChildZoneName -NameServer $delegation.NameServer -IPAddress $delegation.IPAddress -ParentZoneName $delegation.ParentZoneName  
+        }  
+    }  
+  
+    # Configure stub zones  
+    if (Test-Path $stubZonesPath) {  
+        $stubZones = Import-Csv -Path $stubZonesPath  
+        foreach ($stubZone in $stubZones) {  
+            # Assuming the CSV has columns named 'Name' and 'MasterServers'  
+            Add-DnsServerStubZone -ComputerName $serverName -Name $stubZone.Name -MasterServers $stubZone.MasterServers  
+        }  
+    }  
 }  
   
-# Function to configure conditional forwarders  
-Function Configure-ConditionalForwarders {  
-    Param ($conditionalForwarders)  
-    # ... (include the implementation for configuring conditional forwarders)  
-}  
-  
-# Function to configure secondary zones  
-Function Configure-SecondaryZones {  
-    Param ($secondaryZones)  
-    # ... (include the implementation for configuring secondary zones)  
-}  
-  
-# Function to configure root hints  
-Function Configure-RootHints {  
-    Param ($rootHints)  
-    # ... (include the implementation for configuring root hints)  
-}  
-  
-# Function to configure delegations  
-Function Configure-Delegations {  
-    Param ($delegations)  
-    # ... (include the implementation for configuring delegations)  
-}  
-  
-# Function to configure stub zones  
-Function Configure-StubZones {  
-    Param ($stubZones)  
-    # ... (include the implementation for configuring stub zones)  
-}  
-  
-# Create a new PowerShell session on the remote server  
-$session = New-PSSession -ComputerName $RemoteServer  
-  
-# Check if the CSV files exist and call the configuration functions remotely  
-If (Test-Path -Path $forwardersCsv) {  
-    $forwarders = Import-Csv -Path $forwardersCsv | Select-Object -ExpandProperty IPAddress  
-    Invoke-Command -Session $session -ScriptBlock ${function:Configure-GlobalForwarders} -ArgumentList (,$forwarders)  
-} Else {  
-    Write-Host "The forwarders CSV file was not found."  
-}  
-  
-# ... (similar checks and Invoke-Command calls for conditional forwarders, secondary zones, root hints, delegations, and stub zones)  
-  
-# Close the PowerShell session  
-Remove-PSSession -Session $session  
-  
-Write-Host "Remote DNS server configuration is complete."  
+# Output completion message  
+Write-Host "DNS configurations have been applied to all specified servers."  
