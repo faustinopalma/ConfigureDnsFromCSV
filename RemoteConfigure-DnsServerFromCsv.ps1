@@ -25,22 +25,22 @@ foreach ($serverFolder in $serverFolders) {
             Add-DnsServerForwarder -ComputerName $serverName -IPAddress $forwarder.IPAddress  
         }  
     }  
-  
+
     # Configure conditional forwarders  
     if (Test-Path $conditionalForwardersPath) {  
-        $conditionalForwarders = Import-Csv -Path $conditionalForwardersPath  
+        $conditionalForwarders = Import-Csv -Path $conditionalForwardersPath
         foreach ($conditionalForwarder in $conditionalForwarders) {  
-            # Assuming the CSV has columns named 'Name' and 'MasterServers'  
-            Add-DnsServerConditionalForwarderZone -ComputerName $serverName -Name $conditionalForwarder.Name -MasterServers $conditionalForwarder.MasterServers  
+            # Assuming the CSV has columns named 'Name' and 'MasterServers'
+            Add-DnsServerConditionalForwarderZone -ComputerName $serverName -Name $conditionalForwarder.Name -MasterServers $conditionalForwarder.MasterServers.Split(';')
         }  
-    }  
+    }
   
     # Configure secondary zones  
     if (Test-Path $secondaryZonesPath) {  
         $secondaryZones = Import-Csv -Path $secondaryZonesPath  
         foreach ($secondaryZone in $secondaryZones) {  
             # Assuming the CSV has columns named 'Name' and 'MasterServers'  
-            Add-DnsServerSecondaryZone -ComputerName $serverName -Name $secondaryZone.Name -MasterServers $secondaryZone.MasterServers  
+            Add-DnsServerSecondaryZone -ComputerName $serverName -Name $secondaryZone.Name -MasterServers $secondaryZone.MasterServers.Split(';')
         }  
     }  
   

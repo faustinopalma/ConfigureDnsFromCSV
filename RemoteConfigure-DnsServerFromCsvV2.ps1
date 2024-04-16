@@ -31,9 +31,14 @@ foreach ($serverFolder in $serverFolders) {
     # Configure conditional forwarders  
     if (Test-Path $conditionalForwardersPath) {  
         $conditionalForwarders = Import-Csv -Path $conditionalForwardersPath  
-        foreach ($conditionalForwarder in $conditionalForwarders) {  
+        foreach ($conditionalForwarder in $conditionalForwarders) {
+            # Get all DNS server zones
+            $zones = Get-DnsServerZone -ComputerName $serverName -ErrorAction SilentlyContinue  
+            # Filter for conditional forwarder zones  
+            $conditionalForwarders = $zones | Where-Object { $_.ZoneType -eq "ConditionalForwarder" }
+
             $currentConditionalForwarder = Get-DnsServerConditionalForwarderZone -ComputerName $serverName -Name $conditionalForwarder.Name -ErrorAction SilentlyContinue  
-            if ($null -eq $currentConditionalForwarder -or Compare-Object -ReferenceObject $currentConditionalForwarder.MasterServers -DifferenceObject $conditionalForwarder.MasterServers.Split(';')) {  
+            if ($null -eq $currentConditionalForwarder -or (Compare-Object -ReferenceObject $currentConditionalForwarder.MasterServers -DifferenceObject $conditionalForwarder.MasterServers.Split(';'))) {  
                 Add-DnsServerConditionalForwarderZone -ComputerName $serverName -Name $conditionalForwarder.Name -MasterServers $conditionalForwarder.MasterServers -PassThru -ErrorAction SilentlyContinue | Out-Null  
             }  
         }  
