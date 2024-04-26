@@ -31,7 +31,7 @@ foreach ($serverFolder in $serverFolders) {
         $conditionalForwarders = Import-Csv -Path $conditionalForwardersPath
         foreach ($conditionalForwarder in $conditionalForwarders) {  
             # Assuming the CSV has columns named 'Name' and 'MasterServers'
-            if (Get-DnsServerZone -ComputerName $serverName -Name $conditionalForwarder.Name) {
+            if (Get-DnsServerZone -ComputerName $serverName -Name $conditionalForwarder.Name -ErrorAction SilentlyContinue) {
                 Remove-DnsServerZone -ComputerName $serverName -Name $conditionalForwarder.Name -Force
             }
             Add-DnsServerConditionalForwarderZone -ComputerName $serverName -Name $conditionalForwarder.Name -MasterServers $conditionalForwarder.MasterServers.Split(';')
