@@ -31,10 +31,13 @@ foreach ($serverFolder in $serverFolders) {
         $conditionalForwarders = Import-Csv -Path $conditionalForwardersPath
         foreach ($conditionalForwarder in $conditionalForwarders) {  
             # Assuming the CSV has columns named 'Name' and 'MasterServers'
+            if (Get-DnsServerZone -ComputerName $serverName -Name $conditionalForwarder.Name) {
+                Remove-DnsServerZone -ComputerName $serverName -Name $conditionalForwarder.Name -Force
+            }
             Add-DnsServerConditionalForwarderZone -ComputerName $serverName -Name $conditionalForwarder.Name -MasterServers $conditionalForwarder.MasterServers.Split(';')
         }  
     }
-  
+<#
     # Configure secondary zones  
     if (Test-Path $secondaryZonesPath) {  
         $secondaryZones = Import-Csv -Path $secondaryZonesPath  
@@ -43,7 +46,7 @@ foreach ($serverFolder in $serverFolders) {
             Add-DnsServerSecondaryZone -ComputerName $serverName -Name $secondaryZone.Name -MasterServers $secondaryZone.MasterServers.Split(';')
         }  
     }  
-  
+
     # Configure root hints  
     if (Test-Path $rootHintsPath) {  
         $rootHints = Import-Csv -Path $rootHintsPath  
@@ -69,7 +72,8 @@ foreach ($serverFolder in $serverFolders) {
             # Assuming the CSV has columns named 'Name' and 'MasterServers'  
             Add-DnsServerStubZone -ComputerName $serverName -Name $stubZone.Name -MasterServers $stubZone.MasterServers  
         }  
-    }  
+    }
+#>
 }  
   
 # Output completion message  
