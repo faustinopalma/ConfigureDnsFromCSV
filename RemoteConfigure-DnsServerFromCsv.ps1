@@ -93,25 +93,24 @@ foreach ($serverFolder in $serverFolders) {
     }  
    
 
-<#
     # Configure delegations  
     if (Test-Path $delegationsPath) {  
         $delegations = Import-Csv -Path $delegationsPath  
         foreach ($delegation in $delegations) {  
             # Assuming the CSV has columns named 'ChildZoneName', 'NameServer', 'IPAddress', and 'ParentZoneName'  
-            Add-DnsServerZoneDelegation -ComputerName $serverName -ChildZoneName $delegation.ChildZoneName -NameServer $delegation.NameServer -IPAddress $delegation.IPAddress -ParentZoneName $delegation.ParentZoneName  
+            Add-DnsServerZoneDelegation -ComputerName $serverName -ChildZoneName $delegation.ChildZoneName -NameServer $delegation.NameServer -IPAddress $delegation.IPAddress -Name $delegation.ParentZoneName  
         }  
-    }  
+    } 
   
     # Configure stub zones  
     if (Test-Path $stubZonesPath) {  
         $stubZones = Import-Csv -Path $stubZonesPath  
         foreach ($stubZone in $stubZones) {  
             # Assuming the CSV has columns named 'Name' and 'MasterServers'  
-            Add-DnsServerStubZone -ComputerName $serverName -Name $stubZone.Name -MasterServers $stubZone.MasterServers  
+            Add-DnsServerStubZone -ComputerName $serverName -Name $stubZone.Name -MasterServers $stubZone.MasterServers.Split(';')
         }  
     }
-#>
+
 }  
   
 # Output completion message  
