@@ -70,14 +70,15 @@ foreach ($serverFolder in $serverFolders) {
     }
 
 
-    # Configure root hints  
-    if (Test-Path $rootHintsPath) {  
-        $rootHints = Import-Csv -Path $rootHintsPath  
-        foreach ($rootHint in $rootHints) {  
-            # Assuming the CSV has columns named 'NameServer' and 'IPAddress'  
-            Set-DnsServerRootHint -ComputerName $serverName -NameServer $rootHint.NameServer -IPAddress $rootHint.IPAddress  
+    # Configure delegations  
+    if (Test-Path $delegationsPath) {  
+        $delegations = Import-Csv -Path $delegationsPath  
+        foreach ($delegation in $delegations) {  
+            # Assuming the CSV has columns named 'ChildZoneName', 'NameServer', 'IPAddress', and 'ParentZoneName'  
+            Add-DnsServerZoneDelegation -ComputerName $serverName -ChildZoneName $delegation.ChildZoneName -NameServer $delegation.NameServer -IPAddress $delegation.IPAddress -Name $delegation.ParentZoneName  
         }  
     }  
+   
 
 <#
     # Configure delegations  
