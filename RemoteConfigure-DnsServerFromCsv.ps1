@@ -29,9 +29,15 @@ foreach ($serverFolder in $serverFolders) {
     # Configure conditional forwarders  
     if (Test-Path $conditionalForwardersPath) {  
         $conditionalForwarders = Import-Csv -Path $conditionalForwardersPath
-        foreach ($conditionalForwarder in $conditionalForwarders) {  
+        foreach ($conditionalForwarder in $conditionalForwarders) {
             # Assuming the CSV has columns named 'Name' and 'MasterServers'
             if (Get-DnsServerZone -ComputerName $serverName -Name $conditionalForwarder.Name -ErrorAction SilentlyContinue) {
+                $DnsServerZone = Get-DnsServerZone -ComputerName $serverName -Name $conditionalForwarder.Name
+                if (($DnsServerZone.MasterServers.IPAddressToString | ConvertTo-Json) -eq ($conditionalForwarder.MasterServers.Split(';') | ConvertTo-Json)) {
+                    Write-Output "conditional forwarders are set and equal to the required config"
+                } else {
+                    Write-Output "conditional forwarders are set but are NOT equal to the required config"
+                }
                 Set-DnsServerConditionalForwarderZone -ComputerName $serverName -Name $conditionalForwarder.Name -MasterServers $conditionalForwarder.MasterServers.Split(';')
             } else {
                 Add-DnsServerConditionalForwarderZone -ComputerName $serverName -Name $conditionalForwarder.Name -MasterServers $conditionalForwarder.MasterServers.Split(';')
