@@ -60,11 +60,14 @@ foreach ($serverFolder in $serverFolders) {
     # Configure secondary zones  
     if (Test-Path $secondaryZonesPath) {  
         $secondaryZones = Import-Csv -Path $secondaryZonesPath  
-        foreach ($secondaryZone in $secondaryZones) {  
+        foreach ($secondaryZone in $secondaryZones) {
+            if (Get-DnsServerZone -ComputerName $serverName -Name $secondaryZone.Name -ErrorAction SilentlyContinue) {
+                Remove-DnsServerZone -ComputerName $serverName -Name $secondaryZone.Name -Force
+            }
             # Assuming the CSV has columns named 'Name' and 'MasterServers'  
             Add-DnsServerSecondaryZone -ComputerName $serverName -Name $secondaryZone.Name -MasterServers $secondaryZone.MasterServers.Split(';') -ZoneFile $secondaryZone.ZoneFile
         }  
-    } 
+    }
 
 
     # Configure root hints  
