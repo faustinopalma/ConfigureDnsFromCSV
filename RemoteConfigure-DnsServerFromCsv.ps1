@@ -9,14 +9,27 @@ foreach ($serverFolder in $serverFolders) {
     # Define the server name from the folder name  
     $serverName = $serverFolder.Name  
   
-    # Define the path to the CSV files for the current server  
+    # Define the path to the CSV files for the current server
+    $primaryZonesPath = Join-Path -Path $serverFolder.FullName -ChildPath "primary_zones.csv"
     $forwardersPath = Join-Path -Path $serverFolder.FullName -ChildPath "forwarders.csv"  
     $conditionalForwardersPath = Join-Path -Path $serverFolder.FullName -ChildPath "conditional_forwarders.csv"  
     $secondaryZonesPath = Join-Path -Path $serverFolder.FullName -ChildPath "secondary_zones.csv"  
     $rootHintsPath = Join-Path -Path $serverFolder.FullName -ChildPath "root_hints.csv"  
     $delegationsPath = Join-Path -Path $serverFolder.FullName -ChildPath "delegations.csv"  
-    $stubZonesPath = Join-Path -Path $serverFolder.FullName -ChildPath "stub_zones.csv"  
+    $stubZonesPath = Join-Path -Path $serverFolder.FullName -ChildPath "stub_zones.csv"
   
+    # Configure primary zones  
+    if (Test-Path $primaryZonesPath) {  
+        $primaryZones = Import-Csv -Path $primaryZonesPath  
+        foreach ($primaryZone in $primaryZones) {
+            if (Get-DnsServerZone -ComputerName $serverName -Name $primaryZone.Name -ErrorAction SilentlyContinue) {
+                Remove-DnsServerZone -ComputerName $serverName -Name $primaryZone.Name -Force
+            }
+            # Assuming the CSV has columns named 'Name', 'MasterServers', and 'ReplicationScope'
+            Add-DnsServerPrimaryZone -ComputerName $serverName -Name $primaryZone.Name -ReplicationScope $primaryZone.ReplicationScope
+        }  
+    }
+
     # Configure forwarders  
     if (Test-Path $forwardersPath) {  
         $forwarders = Import-Csv -Path $forwardersPath
@@ -64,7 +77,7 @@ foreach ($serverFolder in $serverFolders) {
             if (Get-DnsServerZone -ComputerName $serverName -Name $secondaryZone.Name -ErrorAction SilentlyContinue) {
                 Remove-DnsServerZone -ComputerName $serverName -Name $secondaryZone.Name -Force
             }
-            # Assuming the CSV has columns named 'Name' and 'MasterServers'  
+            # Assuming the CSV has columns named 'Name', 'MasterServers', and 'ZoneFile'  
             Add-DnsServerSecondaryZone -ComputerName $serverName -Name $secondaryZone.Name -MasterServers $secondaryZone.MasterServers.Split(';') -ZoneFile $secondaryZone.ZoneFile
         }  
     }

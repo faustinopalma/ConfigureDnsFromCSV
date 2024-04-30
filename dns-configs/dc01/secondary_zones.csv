@@ -1,3 +1,3 @@
 Name,MasterServers,ZoneFile
-"example.com","10.0.0.2;10.0.0.3","north.contoso.com.dns"
-"example.net","192.168.1.2;192.168.1.3","western.contoso.com.dns"
+"examplesecondary.com","10.0.0.2;10.0.0.3","north.contoso.com.dns"
+"examplesecondary.net","192.168.1.2;192.168.1.3","western.contoso.com.dns"
