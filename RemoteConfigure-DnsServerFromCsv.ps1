@@ -19,12 +19,24 @@ foreach ($serverFolder in $serverFolders) {
   
     # Configure forwarders  
     if (Test-Path $forwardersPath) {  
-        $forwarders = Import-Csv -Path $forwardersPath  
+        $forwarders = Import-Csv -Path $forwardersPath
+        
+        $currentForwarders = (Get-DnsServerForwarder -ComputerName $serverName).IPAddress | Sort-Object  
+        $desiredForwarders = $forwarders.IPAddress | Sort-Object
+
+        if (($currentForwarders.IPAddressToString | ConvertTo-Json) -eq ($desiredForwarders | ConvertTo-Json)) {
+            Write-Output "forwarders are configured and are equal"
+        }
+
+        foreach ($forwarder in $currentForwarders) {
+            Remove-DnsServerForwarder -IPAddress $forwarder.IPAddressToString -Force
+        }
+
         foreach ($forwarder in $forwarders) {  
             # Assuming the CSV has a column named 'IPAddress'  
             Add-DnsServerForwarder -ComputerName $serverName -IPAddress $forwarder.IPAddress  
         }  
-    }  
+    }   
 
     # Configure conditional forwarders  
     if (Test-Path $conditionalForwardersPath) {  
