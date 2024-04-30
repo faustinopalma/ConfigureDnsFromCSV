@@ -56,15 +56,16 @@ foreach ($serverFolder in $serverFolders) {
             }
         }  
     }
-<#
+
     # Configure secondary zones  
     if (Test-Path $secondaryZonesPath) {  
         $secondaryZones = Import-Csv -Path $secondaryZonesPath  
         foreach ($secondaryZone in $secondaryZones) {  
             # Assuming the CSV has columns named 'Name' and 'MasterServers'  
-            Add-DnsServerSecondaryZone -ComputerName $serverName -Name $secondaryZone.Name -MasterServers $secondaryZone.MasterServers.Split(';')
+            Add-DnsServerSecondaryZone -ComputerName $serverName -Name $secondaryZone.Name -MasterServers $secondaryZone.MasterServers.Split(';') -ZoneFile $secondaryZone.ZoneFile
         }  
-    }  
+    } 
+
 
     # Configure root hints  
     if (Test-Path $rootHintsPath) {  
@@ -74,7 +75,8 @@ foreach ($serverFolder in $serverFolders) {
             Set-DnsServerRootHint -ComputerName $serverName -NameServer $rootHint.NameServer -IPAddress $rootHint.IPAddress  
         }  
     }  
-  
+
+<#
     # Configure delegations  
     if (Test-Path $delegationsPath) {  
         $delegations = Import-Csv -Path $delegationsPath  
