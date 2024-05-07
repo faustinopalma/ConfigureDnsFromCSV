@@ -105,10 +105,22 @@ foreach ($serverFolder in $serverFolders) {
     # Configure stub zones  
     if (Test-Path $stubZonesPath) {  
         $stubZones = Import-Csv -Path $stubZonesPath  
-        foreach ($stubZone in $stubZones) {  
+        foreach ($stubZone in $stubZones) {
+            if (Get-DnsServerZone -ComputerName $serverName -Name $stubZone.Name -ErrorAction SilentlyContinue) {
+                Remove-DnsServerZone -ComputerName $serverName -Name $stubZone.Name -Force
+            }
             # Assuming the CSV has columns named 'Name' and 'MasterServers'  
             Add-DnsServerStubZone -ComputerName $serverName -Name $stubZone.Name -MasterServers $stubZone.MasterServers.Split(';')
         }  
+    }
+    $primaryZones_A_recors_Path = Join-Path -Path $serverFolder.FullName -ChildPath "primaryZones" -AdditionalChildPath $primaryZone.Name, "records_A.csv"
+    if (Test-Path $primaryZones_A_recors_Path) {
+        $A_records = Import-Csv -Path $primaryZones_A_recors_Path
+        foreach ($A_record in $A_records) {
+            Add-DnsServerResourceRecordA -ComputerName $serverName -ZoneName $primaryZone.Name -Name $A_record.Name -IPv4Address $A_record.IPv4Address -CreatePtr
+        }
+    } else {
+        Write-Output "zone path NOT found for $($primaryZone.Name)"
     }
 
 }  
