@@ -1,13 +1,13 @@
 # parameters to enable part of the script
 param (
-    [switch]$doPrimaryZones = $false
-    [switch]$doForwarders = $false
-    [switch]$doConditionalForwarders = $false
-    [switch]$doSecondaryZones = $false
-    [switch]$doDelegations = $false
-    [switch]$doStubZones = $false
+    [switch]$doPrimaryZones = $false,
+    [switch]$doForwarders = $false,
+    [switch]$doConditionalForwarders = $false,
+    [switch]$doSecondaryZones = $false,
+    [switch]$doDelegations = $false,
+    [switch]$doStubZones = $false,
     [switch]$doARecords = $false
- )
+)
 
 
 # Define the path to the dns-configs folder  
