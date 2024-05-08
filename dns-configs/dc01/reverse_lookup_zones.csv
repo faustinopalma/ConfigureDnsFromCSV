@@ -1,0 +1,3 @@
+NetworkID,ReplicationScope
+"10.1.0.0/24","forest"
+"10.100.0.0/24","forest"

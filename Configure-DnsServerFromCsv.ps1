@@ -127,3 +127,11 @@ foreach ($serverFolder in $serverFolders) {
   
 # Output completion message  
 Write-Host "DNS configurations have been applied to all specified servers."  
+
+
+# items to automate:
+# 1, forwarders must match csv entries with order
+# 2, seconday zones to be added if not existing and changed if existing (no deletion of zones that are not in csv)
+# 3, conditional forwarders to be added for those that are not active directory integrated
+
+# reverse zones will be migrated manually 
