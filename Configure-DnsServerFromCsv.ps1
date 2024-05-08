@@ -62,7 +62,7 @@ if ($doForwarders -and (Test-Path $forwardersPath)) {
     }
     $currentForwarders = (Get-DnsServerForwarder).IPAddress.IPAddressToString
     Write-Output "forwarders configured as follows"
-    Write-Output ($currentForwarders | ConvertTo-Json)
+    Write-Output ($currentForwarders)
     
     Write-Output "`n"
 }   
