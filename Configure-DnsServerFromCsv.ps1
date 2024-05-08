@@ -1,6 +1,13 @@
+# parameters to enable part of the script
+param (
+    [switch]$doPrimaryZones = $false
+ )
+
+
 # Define the path to the dns-configs folder  
 $dnsConfigsPath = Join-Path -Path $PSScriptRoot -ChildPath "dns-configs"  
 
+# Adding the current server name to the config path to take the configuration related to the server from which the script is executed.
 $serverName = $env:computername  
 $serverFolderPath = Join-Path -Path $dnsConfigsPath -ChildPath $serverName
 
@@ -14,7 +21,8 @@ $delegationsPath = Join-Path -Path $serverFolderPath -ChildPath "delegations.csv
 $stubZonesPath = Join-Path -Path $serverFolderPath -ChildPath "stub_zones.csv"
 
 # Configure primary zones replication scope
-if (Test-Path $primaryZonesPath) {  
+if ($doPrimaryZones -and (Test-Path $primaryZonesPath)) {
+    Write-Output "===> EXECUTING CONFIG ON PRIMARY ZONES"
     $primaryZones = Import-Csv -Path $primaryZonesPath  
     foreach ($primaryZone in $primaryZones) {
         if (Get-DnsServerZone -Name $primaryZone.Name -ErrorAction SilentlyContinue) {
@@ -23,27 +31,30 @@ if (Test-Path $primaryZonesPath) {
             Add-DnsServerPrimaryZone -Name $primaryZone.Name -ReplicationScope $primaryZone.ReplicationScope
         }
     }
+    Write-Output "primary zones configured as follows"
+    foreach ($primaryZone in $primaryZones) {
+        $primaryZoneAsSet = Get-DnsServerZone -Name $primaryZone.Name -ErrorAction SilentlyContinue
+        Write-Output ($primaryZoneAsSet | Select-Object -Property ZoneName, IsDsIntegrated, ReplicationScope)
+        # Write-Output ($primaryZoneAsSet | ConvertTo-Json)
+    }
+    Write-Output "`n"
 }
 
 # Configure forwarders  
-if (Test-Path $forwardersPath) {  
+if (Test-Path $forwardersPath) {
+    Write-Output "===> EXECUTING CONFIG ON FORWARDERS"
     $forwarders = Import-Csv -Path $forwardersPath
-    
-    $currentForwarders = (Get-DnsServerForwarder).IPAddress | Sort-Object  
-    $desiredForwarders = $forwarders.IPAddress | Sort-Object
-
-    if (($currentForwarders.IPAddressToString | ConvertTo-Json) -eq ($desiredForwarders | ConvertTo-Json)) {
-        Write-Output "forwarders are configured and are equal"
-    }
+    $currentForwarders = (Get-DnsServerForwarder).IPAddress.IPAddressToString
 
     foreach ($forwarder in $currentForwarders) {
-        Remove-DnsServerForwarder -IPAddress $forwarder.IPAddressToString -Force
+        Remove-DnsServerForwarder -IPAddress $forwarder -Force
     }
 
     foreach ($forwarder in $forwarders) {  
         # Assuming the CSV has a column named 'IPAddress'  
         Add-DnsServerForwarder -IPAddress $forwarder.IPAddress  
-    }  
+    }
+    Write-Output "`n"
 }   
 
 # Configure conditional forwarders  
@@ -119,10 +130,6 @@ if (Test-Path $primaryZones_A_recors_Path) {
 }
 
 
-
-  
-# Output completion message  
-Write-Host "DNS configurations have been applied to all specified servers."  
 
 
 # items to automate:
