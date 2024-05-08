@@ -135,3 +135,5 @@ Write-Host "DNS configurations have been applied to all specified servers."
 # 3, conditional forwarders to be added for those that are not active directory integrated
 
 # reverse zones will be migrated manually 
+
+
