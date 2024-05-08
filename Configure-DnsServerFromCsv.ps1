@@ -64,7 +64,8 @@ if ($doForwarders -and (Test-Path $forwardersPath)) {
 }   
 
 # Configure conditional forwarders  
-if ($doConditionalForwarders -and (Test-Path $conditionalForwardersPath)) {  
+if ($doConditionalForwarders -and (Test-Path $conditionalForwardersPath)) {
+    write-output "===> EXECUTING CONFIG ON CONDITIONAL FORWARDERS" 
     $conditionalForwarders = Import-Csv -Path $conditionalForwardersPath
     foreach ($conditionalForwarder in $conditionalForwarders) {
         # Assuming the CSV has columns named 'Name' and 'MasterServers'
@@ -79,11 +80,13 @@ if ($doConditionalForwarders -and (Test-Path $conditionalForwardersPath)) {
         } else {
             Add-DnsServerConditionalForwarderZone -Name $conditionalForwarder.Name -MasterServers $conditionalForwarder.MasterServers.Split(';')
         }
-    }  
+    }
+    Write-Output "`n"
 }
 
 # Configure secondary zones  
-if ($doSecondaryZones -and (Test-Path $secondaryZonesPath)) {  
+if ($doSecondaryZones -and (Test-Path $secondaryZonesPath)) {
+    write-output "===> EXECUTING CONFIG ON SECONDARY ZONES"
     $secondaryZones = Import-Csv -Path $secondaryZonesPath  
     foreach ($secondaryZone in $secondaryZones) {
         if (Get-DnsServerZone -Name $secondaryZone.Name -ErrorAction SilentlyContinue) {
@@ -91,21 +94,25 @@ if ($doSecondaryZones -and (Test-Path $secondaryZonesPath)) {
         }
         # Assuming the CSV has columns named 'Name', 'MasterServers', and 'ZoneFile'  
         Add-DnsServerSecondaryZone -Name $secondaryZone.Name -MasterServers $secondaryZone.MasterServers.Split(';') -ZoneFile $secondaryZone.ZoneFile
-    }  
+    }
+    Write-Output "`n"
 }
 
 
 # Configure delegations  
-if ($doDelegations -and (Test-Path $delegationsPath)) {  
+if ($doDelegations -and (Test-Path $delegationsPath)) {
+    write-output "===> EXECUTING CONFIG ON DELEGATIONS" 
     $delegations = Import-Csv -Path $delegationsPath  
     foreach ($delegation in $delegations) {  
         # Assuming the CSV has columns named 'ChildZoneName', 'NameServer', 'IPAddress', and 'ParentZoneName'  
         Add-DnsServerZoneDelegation -ChildZoneName $delegation.ChildZoneName -NameServer $delegation.NameServer -IPAddress $delegation.IPAddress -Name $delegation.ParentZoneName  
-    }  
+    }
+    Write-Output "`n"
 }
 
 # Configure stub zones  
-if ($doStubZones -and (Test-Path $stubZonesPath)) {  
+if ($doStubZones -and (Test-Path $stubZonesPath)) {
+    write-output "===> EXECUTING CONFIG ON STUB ZONES"
     $stubZones = Import-Csv -Path $stubZonesPath  
     foreach ($stubZone in $stubZones) {
         if (Get-DnsServerZone -Name $stubZone.Name -ErrorAction SilentlyContinue) {
@@ -113,17 +120,18 @@ if ($doStubZones -and (Test-Path $stubZonesPath)) {
         }
         # Assuming the CSV has columns named 'Name' and 'MasterServers'  
         Add-DnsServerStubZone -Name $stubZone.Name -MasterServers $stubZone.MasterServers.Split(';')
-    }  
+    }
+    Write-Output "`n"
 }
 
 $primaryZones_A_recors_Path = Join-Path -Path $serverFolderPath -ChildPath "primaryZones" -AdditionalChildPath $primaryZone.Name, "records_A.csv"
 if ($doARecords -and (Test-Path $primaryZones_A_recors_Path)) {
+    Write-Output "===> EXECUTING CONFIG ON A RECORDS"
     $A_records = Import-Csv -Path $primaryZones_A_recors_Path
     foreach ($A_record in $A_records) {
         Add-DnsServerResourceRecordA -ZoneName $primaryZone.Name -Name $A_record.Name -IPv4Address $A_record.IPv4Address -CreatePtr
     }
-} else {
-    Write-Output "zone path NOT found for $($primaryZone.Name)"
+    Write-Output "`n"
 }
 
 
