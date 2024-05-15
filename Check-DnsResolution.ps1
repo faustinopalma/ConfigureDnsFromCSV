@@ -14,8 +14,8 @@
    Configure the script in NSClient++ for execution and create a Nagios service check as needed.  
   
 .NOTES  
-   Created by: [Your Name]  
-   Modified: [Date]  
+   Created by: Fausto Palma  
+   Modified: May 15 2024
   
    Version 1.0  
 #>  
@@ -43,9 +43,9 @@ catch {
   
 # Resolve each hostname and output the result  
 foreach ($hostname in $hostnames) {  
-    $host = $hostname.HostName  
+    $hostNameString = $hostname.HostName  
     try {  
-        $ipAddresses = [System.Net.Dns]::GetHostAddresses($host)  
+        $ipAddresses = [System.Net.Dns]::GetHostAddresses($hostNameString)  
         if ($ipAddresses.Length -gt 0) {  
             $resolvedIPs = ($ipAddresses | Select-Object -ExpandProperty IPAddressToString) -join ', '  
             Write-Output "Resolved $host to IP(s): $resolvedIPs"  
