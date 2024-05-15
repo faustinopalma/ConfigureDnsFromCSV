@@ -6,20 +6,20 @@ param (
 )
 
 
-# Define the path to the dns-configs folder  
-$dnsConfigsPath = Join-Path -Path $PSScriptRoot -ChildPath "dns-configs"  
+# Define the path to the dns-configs folder
+$dnsConfigsPath = Join-Path -Path $PSScriptRoot -ChildPath "dns-configs"
 
 # Adding the current server name to the config path to take the configuration related to the server from which the script is executed.
-$serverName = $env:computername  
+$serverName = $env:computername
 $serverFolderPath = Join-Path -Path $dnsConfigsPath -ChildPath $serverName
 
 
 # Define the path to the CSV files for the current server
-$forwardersPath = Join-Path -Path $serverFolderPath -ChildPath "forwarders.csv"  
-$conditionalForwardersPath = Join-Path -Path $serverFolderPath -ChildPath "conditional_forwarders.csv"  
-$secondaryZonesPath = Join-Path -Path $serverFolderPath -ChildPath "secondary_zones.csv"  
+$forwardersPath = Join-Path -Path $serverFolderPath -ChildPath "forwarders.csv"
+$conditionalForwardersPath = Join-Path -Path $serverFolderPath -ChildPath "conditional_forwarders.csv"
+$secondaryZonesPath = Join-Path -Path $serverFolderPath -ChildPath "secondary_zones.csv"
 
-# Configure forwarders  
+# Configure forwarders
 if ($doForwarders -and (Test-Path $forwardersPath)) {
     Write-Output "===> EXECUTING CONFIG ON FORWARDERS"
     $forwarders = Import-Csv -Path $forwardersPath
@@ -29,20 +29,20 @@ if ($doForwarders -and (Test-Path $forwardersPath)) {
         Remove-DnsServerForwarder -IPAddress $forwarder -Force
     }
 
-    foreach ($forwarder in $forwarders) {  
-        # Assuming the CSV has a column named 'IPAddress'  
-        Add-DnsServerForwarder -IPAddress $forwarder.IPAddress  
+    foreach ($forwarder in $forwarders) {
+        # Assuming the CSV has a column named 'IPAddress'
+        Add-DnsServerForwarder -IPAddress $forwarder.IPAddress
     }
     $currentForwarders = (Get-DnsServerForwarder).IPAddress.IPAddressToString
     Write-Output "forwarders configured as follows"
     Write-Output ($currentForwarders)
-    
-    Write-Output "`n"
-}   
 
-# Configure conditional forwarders  
+    Write-Output "`n"
+}
+
+# Configure conditional forwarders
 if ($doConditionalForwarders -and (Test-Path $conditionalForwardersPath)) {
-    write-output "===> EXECUTING CONFIG ON CONDITIONAL FORWARDERS" 
+    write-output "===> EXECUTING CONFIG ON CONDITIONAL FORWARDERS"
     $conditionalForwarders = Import-Csv -Path $conditionalForwardersPath
     foreach ($conditionalForwarder in $conditionalForwarders) {
         # Assuming the CSV has columns named 'Name' and 'MasterServers'
@@ -61,15 +61,15 @@ if ($doConditionalForwarders -and (Test-Path $conditionalForwardersPath)) {
     Write-Output "`n"
 }
 
-# Configure secondary zones  
+# Configure secondary zones
 if ($doSecondaryZones -and (Test-Path $secondaryZonesPath)) {
     write-output "===> EXECUTING CONFIG ON SECONDARY ZONES"
-    $secondaryZones = Import-Csv -Path $secondaryZonesPath  
+    $secondaryZones = Import-Csv -Path $secondaryZonesPath
     foreach ($secondaryZone in $secondaryZones) {
         if (Get-DnsServerZone -Name $secondaryZone.Name -ErrorAction SilentlyContinue) {
             Remove-DnsServerZone -Name $secondaryZone.Name -Force
         }
-        # Assuming the CSV has columns named 'Name', 'MasterServers', and 'ZoneFile'  
+        # Assuming the CSV has columns named 'Name', 'MasterServers', and 'ZoneFile'
         Add-DnsServerSecondaryZone -Name $secondaryZone.Name -MasterServers $secondaryZone.MasterServers.Split(';') -ZoneFile $secondaryZone.ZoneFile
     }
     Write-Output "`n"
@@ -81,7 +81,7 @@ if ($doSecondaryZones -and (Test-Path $secondaryZonesPath)) {
 # 2, seconday zones to be added if not existing and changed if existing (no deletion of zones that are not in csv)
 # 3, conditional forwarders to be added for those that are not active directory integrated
 
-# reverse zones will be migrated manually 
+# reverse zones will be migrated manually
 
 # test reverse commit
 
@@ -90,4 +90,4 @@ if ($doSecondaryZones -and (Test-Path $secondaryZonesPath)) {
 # script eseguito sulle macchine che fanno check del dns su se stesse.
 
 
-# come svecchiare le zone a mano prima di attivare lo scaveging. 
+# come svecchiare le zone a mano prima di attivare lo scaveging.
