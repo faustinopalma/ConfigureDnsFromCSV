@@ -20,9 +20,13 @@ The results are compiled into a table and displayed in the console.
 
 # Define the list of DNS servers and their debug log file paths
 $dnsServers = @(
-    @{ServerName="DNSServer1"; LogFilePath="C:\DNS\DnsDebugLog1.log"},
-    @{ServerName="DNSServer2"; LogFilePath="C:\DNS\DnsDebugLog2.log"},
-    @{ServerName="DNSServer3"; LogFilePath="C:\DNS\DnsDebugLog3.log"}
+    @{ServerName="dc01"; LogFilePath="C:\DNS\DnsDebugLog.log"},
+    @{ServerName="DNSServer2"; LogFilePath="C:\DNS\DnsDebugLog.log"},
+    @{ServerName="DNSServer3"; LogFilePath="C:\DNS\DnsDebugLog.log"}
+)
+
+$dnsServers = @(
+    @{ServerName="dc01"; LogFilePath="C:\DNS\DnsDebugLog.log"}
 )
 
 # Define the time range for the query (last hour)

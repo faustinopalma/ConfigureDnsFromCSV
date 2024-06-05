@@ -1,5 +1,6 @@
 # Define the list of DNS servers
-$dnsServers = @("DNSServer1", "DNSServer2", "DNSServer3") # Replace with your DNS server names
+# $dnsServers = @("dc01", "DNSServer2", "DNSServer3") # Replace with your DNS server names
+$dnsServers = @("dc01")
 
 # Define the log file path and name
 $logFilePath = "C:\DNS\DnsDebugLog.log"
