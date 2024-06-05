@@ -1,10 +1,14 @@
-param (
-    # Parameter for the path to the CSV file, defaulting to the script's directory
-    [string]$csvFilePath = "$PSScriptRoot\Output.csv",
-
-    # Parameter for the time interval in minutes
-    [int]$intervalMinutes = 5
-)
+param (  
+    # Retrieve the hostname of the machine  
+    #[string]$hostname = (Get-ComputerInfo -Property CsName).CsName,  
+    [string]$hostname = (Get-WmiObject -Class Win32_ComputerSystem).Name,  #powershell 5 compatible
+  
+    # Parameter for the path to the CSV file, defaulting to the script's directory with hostname  
+    [string]$csvFilePath = "$PSScriptRoot\Output_$hostname.csv",  
+  
+    # Parameter for the time interval in minutes  
+    [int]$intervalMinutes = 5  
+) 
 
 # Check if the CSV file exists; if not, create it with headers
 if (-not (Test-Path $csvFilePath)) {
@@ -19,10 +23,10 @@ function Write-DnsQueryStatsToCsv {
 
     # Retrieve the DNS Total Query Received/sec counter
     $dnsStats = Get-Counter -Counter "\DNS\Total Query Received/sec"
-    $queryReceived = $dnsStats.CounterSamples | Where-Object { $_.Path -eq "\DNS\Total Query Received/sec" }
+    Write-Output $dnsStats
 
     # Prepare the data line with timestamp and counter value
-    $dataLine = "$timestamp,$($queryReceived.CookedValue)"
+    $dataLine = "$timestamp,$($dnsStats.CounterSamples.CookedValue)"
 
     # Append the data line to the CSV file
     $dataLine | Out-File -FilePath $csvFilePath -Append
